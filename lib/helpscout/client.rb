@@ -82,7 +82,7 @@ module HelpScout
     #  Header   Status  Int    200
     #  Body     item
 
-    def self.request_item(auth, url, params = {})
+    def self.request_item(auth, url, timeout, params = {})
       item = nil
 
       request_url = ""
@@ -94,7 +94,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -138,7 +138,7 @@ module HelpScout
     #           count   Int    Total number of objects available
     #           items   Array  Collection of objects
 
-    def self.request_items(auth, url, params = {})
+    def self.request_items(auth, url, timeout, params = {})
       items = []
 
       request_url = ""
@@ -150,7 +150,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -194,7 +194,7 @@ module HelpScout
     #           count   Int    Total number of objects available
     #           items   Array  Collection of objects
 
-    def self.request_count(auth, url, params = {})
+    def self.request_count(auth, url, timeout, params = {})
       request_url = ""
       request_url << url
       if params
@@ -204,7 +204,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -235,9 +235,9 @@ module HelpScout
     #  Name      Type    Notes
     #  Location  String  https://api.helpscout.net/v1/conversations/{id}.json
 
-    def self.create_item(auth, url, params = {})
+    def self.create_item(auth, url, timeout, params = {})
       begin
-        response = Client.post(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => @@timeout })
+        response = Client.post(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => timeout })
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -264,9 +264,9 @@ module HelpScout
     #  Name      Type    Notes
     #  Location  String  https://api.helpscout.net/v1/customers/{id}.json
 
-    def self.update_item(auth, url, params = {})
+    def self.update_item(auth, url, timeout, params = {})
       begin
-        response = Client.put(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => @@timeout })
+        response = Client.put(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => timeout })
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -294,7 +294,7 @@ module HelpScout
         key = @@settings["api_key"]
       end
 
-      @@timeout = timeout
+      @timeout = timeout
 
       # The Help Scout API uses Basic Auth, where username is your API Key.
       # Password can be any arbitrary non-zero-length string.
@@ -323,7 +323,7 @@ module HelpScout
 
     def user(userId)
       url = "/users/#{userId}.json"
-      item = Client.request_item(@auth, url, nil)
+      item = Client.request_item(@auth, url, @timeout, nil)
       user = nil
       if item
         user = User.new(item)
@@ -351,7 +351,7 @@ module HelpScout
 
     def users
       url = "/users.json"
-      items = Client.request_items(@auth, url, :page => 1)
+      items = Client.request_items(@auth, url, @timeout, :page => 1)
       users = []
       items.each do |item|
         users << User.new(item)
@@ -381,7 +381,7 @@ module HelpScout
 
     def users_in_mailbox(mailboxId)
       url ="/mailboxes/#{mailboxId}/users.json"
-      items = Client.request_items(@auth, url, :page => 1)
+      items = Client.request_items(@auth, url, @timeout, :page => 1)
       users = []
       items.each do |item|
         users << User.new(item)
@@ -411,7 +411,7 @@ module HelpScout
       url = "/mailboxes.json"
       mailboxes = []
       begin
-        items = Client.request_items(@auth, url, {})
+        items = Client.request_items(@auth, url, @timeout, {})
         items.each do |item|
           mailboxes << Mailbox.new(item)
         end
@@ -439,7 +439,7 @@ module HelpScout
 
     def mailbox(mailboxId)
       url = "/mailboxes/#{mailboxId}.json"
-      item = Client.request_item(@auth, url, nil)
+      item = Client.request_item(@auth, url, @timeout, nil)
       mailbox = nil
       if item
         mailbox = Mailbox.new(item)
@@ -469,7 +469,7 @@ module HelpScout
 
     def folders_in_mailbox(mailboxId)
       url = "/mailboxes/#{mailboxId}/folders.json"
-      items = Client.request_items(@auth, url, :page => 1)
+      items = Client.request_items(@auth, url, @timeout, :page => 1)
       folders = []
       items.each do |item|
         folders << Folder.new(item)
@@ -497,7 +497,7 @@ module HelpScout
       url = "/conversations/#{conversationId}.json"
 
       begin
-        item = Client.request_item(@auth, url, nil)
+        item = Client.request_item(@auth, url, @timeout, nil)
         conversation = nil
         if item
           conversation = Conversation.new(item)
@@ -540,7 +540,7 @@ module HelpScout
       url = "/conversations.json"
 
       begin
-        response = Client.create_item(@auth, url, conversation.to_json)
+        response = Client.create_item(@auth, url, @timeout, conversation.to_json)
       rescue StandardError => e
         puts "Could not create conversation: #{e.message}"
       end
@@ -575,7 +575,7 @@ module HelpScout
       url = "/conversations/#{conversationId}.json"
 
       begin
-        response = Client.create_item(@auth, url, thread.to_json)
+        response = Client.create_item(@auth, url, @timeout, thread.to_json)
       rescue StandardError => e
         puts "Could not create conversation thread: #{e.message}"
       end
@@ -650,7 +650,7 @@ module HelpScout
 
       begin
         options["page"] = page
-        items = Client.request_items(@auth, url, options)
+        items = Client.request_items(@auth, url, @timeout, options)
         items.each do |item|
           conversations << Conversation.new(item)
         end
@@ -732,7 +732,7 @@ module HelpScout
 
       begin
         options["page"] = page
-        items = Client.request_items(@auth, url, options)
+        items = Client.request_items(@auth, url, @timeout, options)
         items.each do |item|
           conversations << Conversation.new(item)
         end
@@ -813,7 +813,7 @@ module HelpScout
 
       begin
         options["page"] = page
-        items = Client.request_items(@auth, url, options)
+        items = Client.request_items(@auth, url, @timeout, options)
         items.each do |item|
           conversations << Conversation.new(item)
         end
@@ -882,7 +882,7 @@ module HelpScout
 
       begin
         options["page"] = page
-        count = Client.request_count(@auth, url, options)
+        count = Client.request_count(@auth, url, @timeout, options)
       rescue StandardError => e
         puts "Conversation Count Request failed: #{e.message}"
       end
@@ -906,7 +906,7 @@ module HelpScout
 
     def attachment_data(attachmentId)
       url = "/attachments/#{attachmentId}/data.json"
-      item = Client.request_item(@auth, url, nil)
+      item = Client.request_item(@auth, url, @timeout, nil)
       attachmentData = nil
       if item
         attachmentData = Conversation::AttachmentData.new(item)
@@ -933,7 +933,7 @@ module HelpScout
 
     def customer(customerId)
       url = "/customers/#{customerId}.json"
-      item = Client.request_item(@auth, url, nil)
+      item = Client.request_item(@auth, url, @timeout, nil)
       customer = nil
       if item
         customer = Customer.new(item)
@@ -993,7 +993,7 @@ module HelpScout
 
       begin
         options["page"] = page
-        items = Client.request_items(@auth, url, options)
+        items = Client.request_items(@auth, url, @timeout, options)
         items.each do |item|
           customers << Customer.new(item)
         end
@@ -1046,7 +1046,7 @@ module HelpScout
       url = "/customers.json"
 
       begin
-        Client.create_item(@auth, url, customer.to_json)
+        Client.create_item(@auth, url, @timeout, customer.to_json)
       rescue StandardError => e
         puts "Could not create customer: #{e.message}"
         false
@@ -1080,7 +1080,7 @@ module HelpScout
       url = "/customers/#{customer.id}.json"
 
       begin
-        Client.update_item(@auth, url, customer.to_json)
+        Client.update_item(@auth, url, @timeout, customer.to_json)
       rescue StandardError => e
         puts "Could not update customer: #{e.message}"
         false
