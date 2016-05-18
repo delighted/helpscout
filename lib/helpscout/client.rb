@@ -94,7 +94,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -150,7 +150,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -204,7 +204,7 @@ module HelpScout
       end
 
       begin
-        response = Client.get(request_url, {:basic_auth => auth})
+        response = Client.get(request_url, {:basic_auth => auth, :timeout => @@timeout})
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -237,7 +237,7 @@ module HelpScout
 
     def self.create_item(auth, url, params = {})
       begin
-        response = Client.post(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params })
+        response = Client.post(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => @@timeout })
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -266,7 +266,7 @@ module HelpScout
 
     def self.update_item(auth, url, params = {})
       begin
-        response = Client.put(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params })
+        response = Client.put(url, {:basic_auth => auth, :headers => { 'Content-Type' => 'application/json' }, :body => params, :timeout => @@timeout })
       rescue SocketError => se
         raise StandardError, se.message
       end
@@ -287,12 +287,14 @@ module HelpScout
     # key  String  Help Scout API Key. Optional. If not passed, the key will be
     #              loaded from @@settings, which defaults to helpscout.yml.
 
-    def initialize(key=nil)
+    def initialize(key=nil, timeout=60)
       Client.settings
 
       if key.nil?
         key = @@settings["api_key"]
       end
+
+      @@timeout = timeout
 
       # The Help Scout API uses Basic Auth, where username is your API Key.
       # Password can be any arbitrary non-zero-length string.
